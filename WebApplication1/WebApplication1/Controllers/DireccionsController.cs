@@ -1,157 +1,103 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using SistemaMensajeriaAPI.Data;
-using SistemaMensajeriaAPI.DTOs;
 using WebApplication1.Models;
+using SistemaMensajeriaAPI.Data;
+namespace WebApplication1.Controllers;
 
-namespace SistemaMensajeriaAPI.Controllers
+
+[Route("api/[controller]")]
+[ApiController]
+public class DireccionsController : ControllerBase
 {
-    [Route("api/[controller]")]
-    [ApiController]
-    public class DireccionesController : ControllerBase
+    private readonly ApplicationDbContext _context;
+    public DireccionsController(ApplicationDbContext context)
     {
-        private readonly ApplicationDbContext _context;
+        _context = context;
+    }
 
-        public DireccionesController(ApplicationDbContext context)
+    // GET: api/Direccion
+    [HttpGet]
+    public async Task<ActionResult<IEnumerable<Direccion>>> GetDireccion()
+    {
+        return await _context.Direcciones.ToListAsync();
+    }
+
+    // GET: api/Direccion/5
+    [HttpGet("{id}")]
+    public async Task<ActionResult<Direccion>> GetDireccion(int id)
+    {
+        var direccion = await _context.Direcciones.FindAsync(id);
+
+        if (direccion == null)
         {
-            _context = context;
+            return NotFound();
         }
 
-        // GET: api/Direcciones
-        [HttpGet]
-        public async Task<ActionResult<IEnumerable<DireccionDTO>>> GetDirecciones()
-        {
-            var direcciones = await _context.Direcciones
-                .Select(d => new DireccionDTO
-                {
-                    Id = d.Id,
-                    Calle = d.Calle,
-                    Sector = d.Sector,
-                    Ciudad = d.Ciudad,
-                    Referencia = d.Referencia
-                })
-                .ToListAsync();
+        return direccion;
+    }
 
-            return Ok(direcciones);
+    // PUT: api/Direccion/5
+    // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
+    [HttpPut("{id}")]
+    public async Task<IActionResult> PutDireccion(int id, Direccion direccion)
+    {
+        if (id != direccion.Id)
+        {
+            return BadRequest();
         }
 
-        // GET: api/Direcciones/5
-        [HttpGet("{id}")]
-        public async Task<ActionResult<DireccionDTO>> GetDireccion(int id)
+        _context.Entry(direccion).State = EntityState.Modified;
+
+        try
         {
-            var direccion = await _context.Direcciones
-                .Where(d => d.Id == id)
-                .Select(d => new DireccionDTO
-                {
-                    Id = d.Id,
-                    Calle = d.Calle,
-                    Sector = d.Sector,
-                    Ciudad = d.Ciudad,
-                    Referencia = d.Referencia
-                })
-                .FirstOrDefaultAsync();
-
-            if (direccion == null)
-            {
-                return NotFound(new
-                {
-                    mensaje = "No se encontró la dirección."
-                });
-            }
-
-            return Ok(direccion);
-        }
-
-        // POST: api/Direcciones
-        [HttpPost]
-        public async Task<ActionResult<DireccionDTO>> CrearDireccion(
-            CrearDireccionDTO dto)
-        {
-            var direccion = new Direccion
-            {
-                Calle = dto.Calle,
-                Sector = dto.Sector,
-                Ciudad = dto.Ciudad,
-                Referencia = dto.Referencia
-            };
-
-            _context.Direcciones.Add(direccion);
             await _context.SaveChangesAsync();
-
-            var respuesta = new DireccionDTO
-            {
-                Id = direccion.Id,
-                Calle = direccion.Calle,
-                Sector = direccion.Sector,
-                Ciudad = direccion.Ciudad,
-                Referencia = direccion.Referencia
-            };
-
-            return CreatedAtAction(
-                nameof(GetDireccion),
-                new { id = direccion.Id },
-                respuesta
-            );
         }
-
-        // PUT: api/Direcciones/5
-        [HttpPut("{id}")]
-        public async Task<IActionResult> ActualizarDireccion(
-            int id,
-            CrearDireccionDTO dto)
+        catch (DbUpdateConcurrencyException)
         {
-            var direccion = await _context.Direcciones.FindAsync(id);
-
-            if (direccion == null)
+            if (!DireccionExists(id))
             {
-                return NotFound(new
-                {
-                    mensaje = "No se encontró la dirección."
-                });
+                return NotFound();
             }
-
-            direccion.Calle = dto.Calle;
-            direccion.Sector = dto.Sector;
-            direccion.Ciudad = dto.Ciudad;
-            direccion.Referencia = dto.Referencia;
-
-            await _context.SaveChangesAsync();
-
-            return NoContent();
+            else
+            {
+                throw;
+            }
         }
 
-        // DELETE: api/Direcciones/5
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> EliminarDireccion(int id)
+        return NoContent();
+    }
+
+    // POST: api/Direccion
+    // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
+    [HttpPost]
+    public async Task<ActionResult<Direccion>> PostDireccion(Direccion direccion)
+    {
+        _context.Direcciones.Add(direccion);
+        await _context.SaveChangesAsync();
+
+        return CreatedAtAction("GetDireccion", new { id = direccion.Id }, direccion);
+    }
+
+    // DELETE: api/Direccion/5
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> DeleteDireccion(int id)
+    {
+        var direccion = await _context.Direcciones.FindAsync(id);
+        if (direccion == null)
         {
-            var direccion = await _context.Direcciones
-                .FirstOrDefaultAsync(d => d.Id == id);
-
-            if (direccion == null)
-            {
-                return NotFound(new
-                {
-                    mensaje = "No se encontró la dirección."
-                });
-            }
-
-            bool tieneEnvios = await _context.Envios.AnyAsync(e =>
-                e.DireccionOrigenId == id ||
-                e.DireccionDestinoId == id);
-
-            if (tieneEnvios)
-            {
-                return BadRequest(new
-                {
-                    mensaje = "No se puede eliminar la dirección porque está asociada a uno o más envíos."
-                });
-            }
-
-            _context.Direcciones.Remove(direccion);
-            await _context.SaveChangesAsync();
-
-            return NoContent();
+            return NotFound();
         }
+
+        _context.Direcciones.Remove(direccion);
+        await _context.SaveChangesAsync();
+
+        return NoContent();
+    }
+
+    private bool DireccionExists(int id)
+    {
+        return _context.Direcciones.Any(e => e.Id == id);
     }
 }
+
 
