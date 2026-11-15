@@ -1,0 +1,29 @@
+ACTIVIDAD: CAPA DE SERVICIOS - SISTEMA DE MENSAJERIA
+
+La estructura del proyecto SistemadeMensajeria.Application sigue la imagen de referencia:
+- Contract: interfaces de servicios de negocio.
+- Core: BaseService.cs, IBaseService.cs y ServiceResult.cs.
+- Dtos: DtoBase.cs y subcarpetas Cliente, Mensajero, Direccion y Envio, cada una con sus DTO.
+- Service: implementaciones concretas de los servicios de negocio.
+
+Se implementan servicios CRUD para Cliente, Mensajero, Direccion y Envio.
+Los DTO de entrada usan Data Annotations para validar campos; [ApiController] responde automáticamente con HTTP 400 cuando la validación falla.
+Los servicios validan que las relaciones Cliente/Mensajero/Direcciones existan antes de registrar o actualizar direcciones y envíos.
+
+Para compilar, desde la carpeta donde está SistemadeMensajeria.slnx:
+  dotnet restore SistemadeMensajeria.slnx
+  dotnet build SistemadeMensajeria.slnx
+
+Para ejecutar:
+  dotnet run --project .\SistemadeMensajeria.API\SistemadeMensajeria.API.csproj
+
+La carpeta Service es singular, igual que la imagen compartida. Los namespaces de C# se mantienen como SistemadeMensajeria.Application.Services para evitar cambiar las referencias internas; esto no afecta la estructura de carpetas.
+
+
+INYECCION DE DEPENDENCIAS (DI):
+En Program.cs se registran con ciclo de vida Scoped:
+- Repositorios: IRepositorio<> -> Repositorio<>.
+- UnitOfWork: IUnitOfWork -> UnitOfWork.
+- Servicios: IClienteService, IMensajeroService, IDireccionService e IEnvioService.
+
+El repositorio prepara los cambios y UnitOfWork ejecuta SaveChangesAsync para confirmar las operaciones de escritura.
