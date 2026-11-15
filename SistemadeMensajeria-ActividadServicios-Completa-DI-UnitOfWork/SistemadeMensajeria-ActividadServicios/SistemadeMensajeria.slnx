@@ -1,0 +1,6 @@
+<Solution>
+<Project Path="SistemadeMensajeria.API/SistemadeMensajeria.API.csproj"/>
+<Project Path="SistemadeMensajeria.Domain/SistemadeMensajeria.Domain.csproj"/>
+<Project Path="SistemadeMensajeria.Infrastructure/SistemadeMensajeria.Infrastructure.csproj"/>
+<Project Path="SistemadeMensajeria.Services/SistemadeMensajeria.Services.csproj"/>
+</Solution>
